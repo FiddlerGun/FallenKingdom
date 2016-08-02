@@ -18,7 +18,7 @@ import net.samagames.api.games.Game;
  */
 public class FGame extends Game<FPlayer> {
     public FGame() {
-        super("fallenkingom", "FallenKingdom", "Des royaumes qui tombent", FPlayer.class);
+        super("fallenkingdom", "FallenKingdom", "Des royaumes qui tombent", FPlayer.class);
 
         //Initilaise game
     }
