@@ -27,9 +27,13 @@ public class FallenKingdom extends JavaPlugin{
 
     FGame game;
 
-    @Overridden
+    private FGame game;
+
     public void onEnable()
     {
+        game = new FGame();
+        SamaGamesAPI.get().getGameManager().registerGame(game);
+
         PluginDescriptionFile pdffile = this.getDescription();
         PluginManager pluginManager = getServer().getPluginManager();
         pluginManager.registerEvents((Listener) this, this);
