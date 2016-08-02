@@ -35,7 +35,7 @@ public class FallenKingdom extends JavaPlugin{
         PluginDescriptionFile pdffile = this.getDescription();
         PluginManager pluginManager = getServer().getPluginManager();
         pluginManager.registerEvents((Listener) this, this);
-        this.getLogger().info(pdffile.getName() + " activated.");
+        this.getLogger().info("FallenKingdom activated.");
         game = new FGame();
         SamaGamesAPI.get().getGameManager().registerGame(game);
         SamaGamesAPI.get().getGameManager().setMaxReconnectTime(2);
