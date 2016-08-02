@@ -25,8 +25,6 @@ import org.bukkit.plugin.java.JavaPlugin;
  */
 public class FallenKingdom extends JavaPlugin{
 
-    FGame game;
-
     private FGame game;
 
     public void onEnable()

@@ -27,6 +27,6 @@ public class FTeam {
 
     public int count()
     {
-        return players.size():
+        return players.size();
     }
 }
