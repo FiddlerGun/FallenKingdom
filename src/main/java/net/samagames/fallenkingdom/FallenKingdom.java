@@ -1,5 +1,7 @@
 package net.samagames.fallenkingdom;
 
+import net.samagames.api.SamaGamesAPI;
+import net.samagames.fallenkingdom.game.FGame;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
@@ -18,9 +20,12 @@ import org.bukkit.plugin.java.JavaPlugin;
  */
 public class FallenKingdom extends JavaPlugin{
 
+    private FGame game;
+
     public void onEnable()
     {
-        //TODO
+        game = new FGame();
+        SamaGamesAPI.get().getGameManager().registerGame(game);
     }
 
     public void onDisable()
