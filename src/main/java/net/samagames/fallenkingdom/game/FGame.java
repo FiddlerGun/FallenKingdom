@@ -20,7 +20,7 @@ public class FGame extends Game<FPlayer> {
     public FGame() {
         super("fallenkingdom", "FallenKingdom", "Des royaumes qui tombent", FPlayer.class);
 
-        //Initilaise game
+        //Initialise games
     }
 
 
