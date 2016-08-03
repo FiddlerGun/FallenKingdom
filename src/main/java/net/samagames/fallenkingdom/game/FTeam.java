@@ -8,21 +8,24 @@ import java.util.ArrayList;
 public class FTeam {
 
     private int size;
+    public FTeamType type;
     ArrayList<FPlayer> players;
 
-    public FTeam(int size, String name)
+    public FTeam(FTeamType type)
     {
-        this.size = size;
+        this.type = type;
     }
 
     public void addPlayer(FPlayer p)
     {
         players.add(p);
+        p.setTeam(this);
     }
 
     public void removePlayer(FPlayer p)
     {
         players.remove(p);
+        p.setTeam(null);
     }
 
     public int count()

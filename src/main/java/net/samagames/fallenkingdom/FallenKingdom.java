@@ -31,22 +31,18 @@ public class FallenKingdom extends JavaPlugin{
     {
         game = new FGame();
         SamaGamesAPI.get().getGameManager().registerGame(game);
-
+        SamaGamesAPI.get().getGameManager().setMaxReconnectTime(2);
         PluginDescriptionFile pdffile = this.getDescription();
         PluginManager pluginManager = getServer().getPluginManager();
         pluginManager.registerEvents((Listener) this, this);
-        this.getLogger().info("FallenKingdom activated.");
-        game = new FGame();
-        SamaGamesAPI.get().getGameManager().registerGame(game);
-        SamaGamesAPI.get().getGameManager().setMaxReconnectTime(2);
+        this.getLogger().info("Fallen Kingdom activated.");
     }
 
     @Overridden
     public void onDisable()
     {
         PluginDescriptionFile pdffile = this.getDescription();
-        this.getLogger().info(pdffile.getName() + " désactivé.");
+        this.getLogger().info("Fallen Kingdom deactivated.");
     }
-
 }
 

@@ -18,7 +18,22 @@ import org.bukkit.entity.Player;
  * ＿＿▔▔＿＿▔▔＿＿
  */
 public class FPlayer extends GamePlayer {
+
+    private FTeam team;
+    private Player player;
+
     public FPlayer(Player player) {
         super(player);
     }
+
+    public void setTeam(FTeam team)
+    {
+        this.team = team;
+    }
+
+    public FTeam getTeam()
+    {
+        return team;
+    }
+
 }

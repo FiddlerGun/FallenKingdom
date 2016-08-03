@@ -6,9 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-
-import java.util.ArrayList;
-
+import java.util.HashMap;
 import static org.bukkit.Bukkit.getServer;
 
 
@@ -28,10 +26,10 @@ import static org.bukkit.Bukkit.getServer;
  */
 public class FGame extends Game<FPlayer> {
 
-    private int maxPlayers = 4;
     private int step = 0;
     private boolean canBreak;
-    private ArrayList<FTeam> teams;
+    private HashMap<FTeamType, FTeam> teams;
+    private HashMap<Player, FPlayer> players;
 
     public FGame() {
         super("fallenkingdom", "FallenKingdom", "Des royaumes qui tombent", FPlayer.class);
@@ -46,11 +44,11 @@ public class FGame extends Game<FPlayer> {
 
     private void init()
     {
-        teams.add(new FTeam(maxPlayers, "Rouge"));
-        teams.add(new FTeam(maxPlayers, "Vert"));
-        teams.add(new FTeam(maxPlayers, "Jaune"));
-        teams.add(new FTeam(maxPlayers, "Bleu"));
-        teams.add(new FTeam(maxPlayers, "Orange"));
+        teams.put(FTeamType.ROUGE, new FTeam(FTeamType.ROUGE));
+        teams.put(FTeamType.VERT, new FTeam(FTeamType.VERT));
+        teams.put(FTeamType.BLEU, new FTeam(FTeamType.BLEU));
+        teams.put(FTeamType.JAUNE, new FTeam(FTeamType.JAUNE));
+        teams.put(FTeamType.ORANGE, new FTeam(FTeamType.ORANGE));
         stepPlus(400);
         canBreak = false;
         //TODO
@@ -81,20 +79,16 @@ public class FGame extends Game<FPlayer> {
     @Override
     public void handleLogin(Player p)
     {
-        //TODO teleport player to lobby spawn
         super.handleLogin(p);
+        players.put(p, new FPlayer(p));
+        //TODO teleport player to lobby spawn
     }
 
     @Override
     public void handleLogout(Player p)
     {
-        //TODO
         super.handleLogout(p);
-    }
-
-    public void endGame()
-    {
-        //TODO stop tasks, rewards, etc.
+        //TODO
     }
 
     public void startPlay()
@@ -113,6 +107,11 @@ public class FGame extends Game<FPlayer> {
         //TODO
     }
 
+    public void endGame()
+    {
+        //TODO stop tasks, rewards, etc.
+    }
+
     @EventHandler
     public void onBlockBreak(BlockBreakEvent e)
     {
@@ -125,5 +124,10 @@ public class FGame extends Game<FPlayer> {
     {
         if(!canBreak)
             e.setCancelled(true);
+    }
+
+    public void setPlayerTeam(Player p, FTeamType type)
+    {
+        teams.get(type).addPlayer(players.get(p));
     }
 }
