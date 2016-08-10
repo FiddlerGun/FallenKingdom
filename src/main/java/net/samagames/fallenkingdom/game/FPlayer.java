@@ -21,6 +21,7 @@ public class FPlayer extends GamePlayer {
 
     private FTeam team;
     private Player player;
+    public Integer coins = 300;
 
     public FPlayer(Player player) {
         super(player);
@@ -32,8 +33,18 @@ public class FPlayer extends GamePlayer {
     }
 
     public FTeam getTeam()
+    {return team;}
+
+    public double getHealth()
     {
-        return team;
+        return player.getHealth();
     }
 
+    public void addCoins(int c)
+    {
+        coins += c;
+    }
+
+    public Player getPlayer()
+    {return player;}
 }

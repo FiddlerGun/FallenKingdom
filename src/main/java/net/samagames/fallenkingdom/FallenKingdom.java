@@ -2,7 +2,6 @@ package net.samagames.fallenkingdom;
 
 import net.samagames.api.SamaGamesAPI;
 import net.samagames.fallenkingdom.game.FGame;
-import org.bukkit.craftbukkit.v1_9_R2.Overridden;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
@@ -27,6 +26,7 @@ public class FallenKingdom extends JavaPlugin{
 
     private FGame game;
 
+    @Override
     public void onEnable()
     {
         game = new FGame();
@@ -38,7 +38,7 @@ public class FallenKingdom extends JavaPlugin{
         this.getLogger().info("Fallen Kingdom activated.");
     }
 
-    @Overridden
+    @Override
     public void onDisable()
     {
         PluginDescriptionFile pdffile = this.getDescription();

@@ -2,11 +2,22 @@ package net.samagames.fallenkingdom.game;
 
 import net.samagames.api.SamaGamesAPI;
 import net.samagames.api.games.Game;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+
 import java.util.HashMap;
+
 import static org.bukkit.Bukkit.getServer;
 
 
@@ -24,22 +35,23 @@ import static org.bukkit.Bukkit.getServer;
  * ＿＿╱▕▔▔▏╲＿＿
  * ＿＿▔▔＿＿▔▔＿＿
  */
-public class FGame extends Game<FPlayer> {
+public class FGame extends Game<FPlayer> implements Listener{
 
-    private int step = 0;
-    private boolean canBreak;
-    private HashMap<FTeamType, FTeam> teams;
-    private HashMap<Player, FPlayer> players;
+    private FStage step = FStage.INIT;
+    private HashMap<FTeamType, FTeam> teams = new HashMap<>();
+    private HashMap<Player, FPlayer> players = new HashMap<>();
+    private long timerSecs;
+    private int timerTaskId;
 
     public FGame() {
         super("fallenkingdom", "FallenKingdom", "Des royaumes qui tombent", FPlayer.class);
-        init();
     }
 
     @Override
     public void startGame()
     {
         super.startGame();
+        init();
     }
 
     private void init()
@@ -49,31 +61,66 @@ public class FGame extends Game<FPlayer> {
         teams.put(FTeamType.BLEU, new FTeam(FTeamType.BLEU));
         teams.put(FTeamType.JAUNE, new FTeam(FTeamType.JAUNE));
         teams.put(FTeamType.ORANGE, new FTeam(FTeamType.ORANGE));
-        stepPlus(400);
-        canBreak = false;
+        stepPlus2(30);
         //TODO
     }
 
-    public void stepPlus(long time)
+    /*private void stepPlus(long time)
     {
-        step++;
+        step = FStage.values()[step.ordinal() + 1];
         getServer().getScheduler().runTaskLater(SamaGamesAPI.get().getPlugin(), new Runnable() {
             @Override
             public void run() {
-                if(step == 1)
+                if(step == FStage.MATCHMAKING)
                 {
                     startPlay();
                     stepPlus(12000);
                 }
-                else if (step == 2)
+                else if (step == FStage.PREP)
                 {
                     startPvp();
                     stepPlus(6000);
                 }
                 else
+                {
+                    step = FStage.BATTLE;
                     startBattle();
+                }
             }
         }, time);
+    }*/
+
+    private void stepPlus2(long seconds)
+    {
+        timerSecs = seconds;
+        timerTaskId = getServer().getScheduler().scheduleSyncRepeatingTask(SamaGamesAPI.get().getPlugin(), new Runnable() {
+            @Override
+            public void run() {
+                if(timerSecs < 0)
+                {
+                    if(step == FStage.MATCHMAKING)
+                    {
+                        startPlay();
+                        stepPlus2(600);
+                    }
+                    else if (step == FStage.PREP)
+                    {
+                        startPvp();
+                        stepPlus2(300);
+                    }
+                    else
+                    {
+                        step = FStage.BATTLE;
+                        startBattle();
+                    }
+                }
+                else
+                {
+                    timerSecs--;
+                    //TODO update scoreboard
+                }
+            }
+        }, 0L, 20L);
     }
 
     @Override
@@ -91,18 +138,30 @@ public class FGame extends Game<FPlayer> {
         //TODO
     }
 
-    public void startPlay()
+    @Override
+    public void handleReconnect(Player p)
     {
-        canBreak = true;
+
+    }
+
+    private void startPlay()
+    {
+        for(FPlayer fp : players.values())
+        {
+            fp.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 0));
+        }
         //TODO teleport players to team spawns
     }
 
-    public void startPvp()
+    private void startPvp()
     {
-        //TODO enable PvP
+        for(FPlayer fp : players.values())
+        {
+            fp.getPlayer().removePotionEffect(PotionEffectType.SPEED);
+        }
     }
 
-    public void startBattle()
+    private void startBattle()
     {
         //TODO
     }
@@ -115,19 +174,100 @@ public class FGame extends Game<FPlayer> {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent e)
     {
-        if(!canBreak)
-            e.setCancelled(true);
+        switch (step) {
+            case MATCHMAKING:
+                e.setCancelled(true);
+                break;
+            default:
+                if(getBlockZone(e.getPlayer(), e.getBlock()) == FZone.ENEMY)
+                    e.setCancelled(true);
+                break;
+        }
     }
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent e)
     {
-        if(!canBreak)
-            e.setCancelled(true);
+        if(e.getBlock().getType() == Material.OBSIDIAN)
+            e.setCancelled(true); //A DISCUTER
+        switch (step) {
+            case MATCHMAKING:
+                e.setCancelled(true);
+                break;
+            case PREP:
+            case PVP:
+                if(e.getBlock().getType() == Material.TNT || getBlockZone(e.getPlayer(), e.getBlock()) != FZone.BASE)
+                    e.setCancelled(true);
+                break;
+            case BATTLE:
+                FZone zone = getBlockZone(e.getPlayer(), e.getBlock());
+                if(zone == FZone.ENEMY || e.getBlock().getType() == Material.TNT && zone == FZone.BASE)
+                    e.setCancelled(true);
+                break;
+        }
     }
 
     public void setPlayerTeam(Player p, FTeamType type)
     {
         teams.get(type).addPlayer(players.get(p));
+    }
+
+    public boolean isInPlayerTeamBase(Player p, Location loc)
+    {
+        return players.get(p).getTeam().isInBase(loc);
+    }
+
+    private FZone getBlockZone(Player p, Block blk)
+    {
+        if(players.get(p).getTeam().isInBase(blk.getLocation()))
+            return FZone.BASE;
+        else
+        {
+            for(FTeam ft : teams.values())
+            {
+                if(ft.isInBase(blk.getLocation()))
+                    return FZone.ENEMY;
+            }
+            return FZone.WILD;
+        }
+    }
+
+    @EventHandler
+    public void onEntityDamageByEntity(EntityDamageByEntityEvent e)
+    {
+        if(e.getEntity() instanceof Player && e.getDamager() instanceof Player) {
+            FPlayer damager = players.get(e.getDamager());
+            FPlayer player = players.get(e.getEntity());
+            if (damager.getTeam() == player.getTeam()) {
+                e.setCancelled(true);
+                return;
+            }
+            switch (step) {
+                case INIT:
+                case PREP:
+                    e.setCancelled(true);
+                    break;
+                case PVP:
+                case BATTLE:
+                    if(e.getDamage() > player.getHealth())
+                        player.getTeam().addKillCoins(player);
+                    break;
+            }
+        }
+
+    }
+
+    @EventHandler
+    public void onPlayerDeath(PlayerDeathEvent e)
+    {
+        e.setKeepInventory(true);
+        e.setKeepLevel(true);
+    }
+
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent e)
+    {
+        if(getBlockZone(e.getPlayer(), e.getClickedBlock()) == FZone.ENEMY)
+            e.setCancelled(true);
     }
 }

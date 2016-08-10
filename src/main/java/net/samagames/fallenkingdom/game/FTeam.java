@@ -1,5 +1,9 @@
 package net.samagames.fallenkingdom.game;
 
+import net.samagames.api.SamaGamesAPI;
+import net.samagames.tools.Area;
+import org.bukkit.Location;
+
 import java.util.ArrayList;
 
 /**
@@ -9,11 +13,13 @@ public class FTeam {
 
     private int size;
     public FTeamType type;
-    ArrayList<FPlayer> players;
+    private ArrayList<FPlayer> players = new ArrayList<>();
+    private Area baseArea;
 
     public FTeam(FTeamType type)
     {
         this.type = type;
+        baseArea = net.samagames.tools.Area.str2area(SamaGamesAPI.get().getGameManager().getGameProperties().getConfigs().get(type.name()).getAsString());
     }
 
     public void addPlayer(FPlayer p)
@@ -31,5 +37,30 @@ public class FTeam {
     public int count()
     {
         return players.size();
+    }
+
+    public double getHealth()
+    {
+        double total = 0;
+        for(FPlayer p : players)
+            total += p.getHealth();
+        return total;
+    }
+
+    public Area getBaseArea()
+    {
+        return baseArea;
+    }
+
+    public boolean isInBase(Location loc)
+    {
+        return baseArea.isInArea(loc);
+    }
+
+    public void addKillCoins(FPlayer p)
+    {
+        for(FPlayer fp : players)
+            fp.addCoins(50);
+        p.addCoins(950);
     }
 }
