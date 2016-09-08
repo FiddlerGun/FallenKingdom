@@ -1,5 +1,6 @@
 package net.samagames.fallenkingdom.game;
 
+import net.minecraft.server.v1_9_R2.BlockFenceGate;
 import net.samagames.api.SamaGamesAPI;
 import net.samagames.api.games.Game;
 import net.samagames.api.games.themachine.ICoherenceMachine;
@@ -17,6 +18,9 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.material.Door;
+import org.bukkit.material.Gate;
+import org.bukkit.material.TrapDoor;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -85,17 +89,20 @@ public class FGame extends Game<FPlayer> implements Listener{
                     {
                         step = FStage.PREP;
                         startPlay();
-                        stepPlus(600);
                     }
                     else if (step == FStage.PREP)
                     {
                         step = FStage.PVP;
                         startPvp();
-                        stepPlus(300);
+                    }
+                    else if(step == FStage.PVP)
+                    {
+                        step = FStage.BATTLE;
+                        startBattle();
                     }
                     else
                     {
-                        startBattle();
+                        endGame();
                     }
                 }
                 else
@@ -139,6 +146,7 @@ public class FGame extends Game<FPlayer> implements Listener{
         stepPlus(600);
         for(FPlayer fp : players.values())
         {
+            fp.getPlayer().getInventory().clear();
             fp.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 0));
         }
         for(FTeam ft : teams.values())
@@ -160,12 +168,13 @@ public class FGame extends Game<FPlayer> implements Listener{
 
     private void startBattle()
     {
-        step = FStage.BATTLE;
-        //TODO
+        stepPlus(1200);
     }
 
     public void endGame()
     {
+        //TODO Choose winner team
+        getServer().getScheduler().cancelTask(timerTaskId);
         //TODO stop tasks, rewards, etc.
     }
 
@@ -252,7 +261,6 @@ public class FGame extends Game<FPlayer> implements Listener{
                     break;
             }
         }
-
     }
 
     @EventHandler
@@ -265,15 +273,28 @@ public class FGame extends Game<FPlayer> implements Listener{
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent e)
     {
-        if(getBlockZone(e.getPlayer(), e.getClickedBlock()) == FZone.ENEMY)
-            e.setCancelled(true);
+        if(e.getClickedBlock() instanceof Door || e.getClickedBlock() instanceof TrapDoor || e.getClickedBlock() instanceof Gate) {
+            final Block d = e.getClickedBlock();
+            if (getBlockZone(e.getPlayer(), e.getClickedBlock()) == FZone.ENEMY)
+                e.setCancelled(true);
+            else
+                getServer().getScheduler().runTaskLater(SamaGamesAPI.get().getPlugin(), new Runnable() {
+                    @Override
+                    public void run() {
+                        if(d instanceof Door)
+                            ((Door)d).setOpen(false);
+                        else if(d instanceof  TrapDoor)
+                            ((TrapDoor)d).setOpen(false);
+                        else
+                            ((Gate)d).setOpen(false);
+                    }
+                }, 40l);
+        }
     }
 
     /*public void test()
     {
         net.samagames.tools.scoreboards.ObjectiveSign v = new ObjectiveSign("Matching", "Fallen Kingdom");
-        net.samagames.tools.scoreboards.TeamHandler e;
-        TeamHandler.VTeam vt;
-        vt.
+        net.samagames.tools.scoreboards.ObjectiveSign.RawObjective.
     }*/
 }
