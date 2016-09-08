@@ -42,6 +42,7 @@ public class FGame extends Game<FPlayer> implements Listener{
     private HashMap<Player, FPlayer> players = new HashMap<>();
     private long timerSecs;
     private int timerTaskId;
+    private Location lobbyLoc = net.samagames.tools.LocationUtils.str2loc(SamaGamesAPI.get().getGameManager().getGameProperties().getConfigs().get("LobbyLoc").getAsString());
 
     public FGame() {
         super("fallenkingdom", "FallenKingdom", "Des royaumes qui tombent", FPlayer.class);
@@ -61,36 +62,11 @@ public class FGame extends Game<FPlayer> implements Listener{
         teams.put(FTeamType.BLEU, new FTeam(FTeamType.BLEU));
         teams.put(FTeamType.JAUNE, new FTeam(FTeamType.JAUNE));
         teams.put(FTeamType.ORANGE, new FTeam(FTeamType.ORANGE));
-        stepPlus2(30);
+        stepPlus(30);
         //TODO
     }
 
-    /*private void stepPlus(long time)
-    {
-        step = FStage.values()[step.ordinal() + 1];
-        getServer().getScheduler().runTaskLater(SamaGamesAPI.get().getPlugin(), new Runnable() {
-            @Override
-            public void run() {
-                if(step == FStage.MATCHMAKING)
-                {
-                    startPlay();
-                    stepPlus(12000);
-                }
-                else if (step == FStage.PREP)
-                {
-                    startPvp();
-                    stepPlus(6000);
-                }
-                else
-                {
-                    step = FStage.BATTLE;
-                    startBattle();
-                }
-            }
-        }, time);
-    }*/
-
-    private void stepPlus2(long seconds)
+    private void stepPlus(long seconds)
     {
         timerSecs = seconds;
         timerTaskId = getServer().getScheduler().scheduleSyncRepeatingTask(SamaGamesAPI.get().getPlugin(), new Runnable() {
@@ -100,13 +76,15 @@ public class FGame extends Game<FPlayer> implements Listener{
                 {
                     if(step == FStage.MATCHMAKING)
                     {
+                        step = FStage.PREP;
                         startPlay();
-                        stepPlus2(600);
+                        stepPlus(600);
                     }
                     else if (step == FStage.PREP)
                     {
+                        step = FStage.PVP;
                         startPvp();
-                        stepPlus2(300);
+                        stepPlus(300);
                     }
                     else
                     {
@@ -128,7 +106,10 @@ public class FGame extends Game<FPlayer> implements Listener{
     {
         super.handleLogin(p);
         players.put(p, new FPlayer(p));
-        //TODO teleport player to lobby spawn
+        for(FPlayer fp : players.values())
+        {
+            fp.getPlayer().teleport(lobbyLoc);
+        }
     }
 
     @Override
@@ -141,7 +122,7 @@ public class FGame extends Game<FPlayer> implements Listener{
     @Override
     public void handleReconnect(Player p)
     {
-
+        //TODO Check if prep. speed potion effect still active. If yes, remove it.
     }
 
     private void startPlay()
