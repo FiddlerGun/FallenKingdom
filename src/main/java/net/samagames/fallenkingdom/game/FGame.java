@@ -47,6 +47,7 @@ public class FGame extends Game<FPlayer> implements Listener{
     private long timerSecs;
     private int timerTaskId;
     private ICoherenceMachine coherMach;
+    private Location lobbyLoc = net.samagames.tools.LocationUtils.str2loc(SamaGamesAPI.get().getGameManager().getGameProperties().getConfigs().get("LobbyLoc").getAsString());
 
     public FGame() {
         super("fallenkingdom", "FallenKingdom", "Des royaumes qui tombent", FPlayer.class);
@@ -82,12 +83,15 @@ public class FGame extends Game<FPlayer> implements Listener{
                     getServer().getScheduler().cancelTask(timerTaskId);
                     if(step == FStage.MATCHMAKING)
                     {
+                        step = FStage.PREP;
                         startPlay();
+                        stepPlus(600);
                     }
                     else if (step == FStage.PREP)
                     {
+                        step = FStage.PVP;
                         startPvp();
-
+                        stepPlus(300);
                     }
                     else
                     {
@@ -108,8 +112,12 @@ public class FGame extends Game<FPlayer> implements Listener{
     {
         super.handleLogin(p);
         players.put(p, new FPlayer(p));
-        coherMach.getMessageManager().writeGameStartIn((int)timerSecs).display(p);
+        //coherMach.getMessageManager().writeGameStartIn((int)timerSecs).display(p);
         //TODO teleport player to lobby spawn
+        for(FPlayer fp : players.values())
+        {
+            fp.getPlayer().teleport(lobbyLoc);
+        }
     }
 
     @Override
@@ -123,6 +131,7 @@ public class FGame extends Game<FPlayer> implements Listener{
     public void handleReconnect(Player p)
     {
         super.handleReconnect(p);
+        //TODO Check if prep. speed potion effect still active. If yes, remove it.
     }
 
     private void startPlay()
