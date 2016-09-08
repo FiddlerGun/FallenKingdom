@@ -15,6 +15,7 @@ public class FTeam {
     public FTeamType type;
     private ArrayList<FPlayer> players = new ArrayList<>();
     private Area baseArea;
+    private Location baseSpawn;
 
     public FTeam(FTeamType type)
     {
@@ -62,5 +63,13 @@ public class FTeam {
         for(FPlayer fp : players)
             fp.addCoins(50);
         p.addCoins(950);
+    }
+
+    public void tpPlayersToBase()
+    {
+        for(FPlayer fp : players)
+        {
+            fp.getPlayer().teleport(baseSpawn);
+        }
     }
 }

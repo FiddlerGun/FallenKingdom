@@ -2,6 +2,10 @@ package net.samagames.fallenkingdom.game;
 
 import net.samagames.api.SamaGamesAPI;
 import net.samagames.api.games.Game;
+import net.samagames.api.games.themachine.ICoherenceMachine;
+import net.samagames.tools.scoreboards.ObjectiveSign;
+import net.samagames.tools.scoreboards.TeamHandler;
+import net.samagames.tools.scoreboards.VObjective;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -42,6 +46,7 @@ public class FGame extends Game<FPlayer> implements Listener{
     private HashMap<Player, FPlayer> players = new HashMap<>();
     private long timerSecs;
     private int timerTaskId;
+    private ICoherenceMachine coherMach;
 
     public FGame() {
         super("fallenkingdom", "FallenKingdom", "Des royaumes qui tombent", FPlayer.class);
@@ -56,41 +61,17 @@ public class FGame extends Game<FPlayer> implements Listener{
 
     private void init()
     {
+        coherMach = getCoherenceMachine();
         teams.put(FTeamType.ROUGE, new FTeam(FTeamType.ROUGE));
         teams.put(FTeamType.VERT, new FTeam(FTeamType.VERT));
         teams.put(FTeamType.BLEU, new FTeam(FTeamType.BLEU));
         teams.put(FTeamType.JAUNE, new FTeam(FTeamType.JAUNE));
         teams.put(FTeamType.ORANGE, new FTeam(FTeamType.ORANGE));
-        stepPlus2(30);
+        stepPlus(30);
         //TODO
     }
 
-    /*private void stepPlus(long time)
-    {
-        step = FStage.values()[step.ordinal() + 1];
-        getServer().getScheduler().runTaskLater(SamaGamesAPI.get().getPlugin(), new Runnable() {
-            @Override
-            public void run() {
-                if(step == FStage.MATCHMAKING)
-                {
-                    startPlay();
-                    stepPlus(12000);
-                }
-                else if (step == FStage.PREP)
-                {
-                    startPvp();
-                    stepPlus(6000);
-                }
-                else
-                {
-                    step = FStage.BATTLE;
-                    startBattle();
-                }
-            }
-        }, time);
-    }*/
-
-    private void stepPlus2(long seconds)
+    private void stepPlus(long seconds)
     {
         timerSecs = seconds;
         timerTaskId = getServer().getScheduler().scheduleSyncRepeatingTask(SamaGamesAPI.get().getPlugin(), new Runnable() {
@@ -98,19 +79,18 @@ public class FGame extends Game<FPlayer> implements Listener{
             public void run() {
                 if(timerSecs < 0)
                 {
+                    getServer().getScheduler().cancelTask(timerTaskId);
                     if(step == FStage.MATCHMAKING)
                     {
                         startPlay();
-                        stepPlus2(600);
                     }
                     else if (step == FStage.PREP)
                     {
                         startPvp();
-                        stepPlus2(300);
+
                     }
                     else
                     {
-                        step = FStage.BATTLE;
                         startBattle();
                     }
                 }
@@ -128,6 +108,7 @@ public class FGame extends Game<FPlayer> implements Listener{
     {
         super.handleLogin(p);
         players.put(p, new FPlayer(p));
+        coherMach.getMessageManager().writeGameStartIn((int)timerSecs).display(p);
         //TODO teleport player to lobby spawn
     }
 
@@ -141,28 +122,36 @@ public class FGame extends Game<FPlayer> implements Listener{
     @Override
     public void handleReconnect(Player p)
     {
-
+        super.handleReconnect(p);
     }
 
     private void startPlay()
     {
+        stepPlus(600);
         for(FPlayer fp : players.values())
         {
             fp.getPlayer().addPotionEffect(new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 0));
         }
-        //TODO teleport players to team spawns
+        for(FTeam ft : teams.values())
+        {
+            ft.tpPlayersToBase();
+        }
+        coherMach.getMessageManager().writeGameStart().displayToAll();
     }
 
     private void startPvp()
     {
+        stepPlus(300);
         for(FPlayer fp : players.values())
         {
             fp.getPlayer().removePotionEffect(PotionEffectType.SPEED);
         }
+        //coherMach.getMessageManager().writeCustomMessage()
     }
 
     private void startBattle()
     {
+        step = FStage.BATTLE;
         //TODO
     }
 
@@ -270,4 +259,12 @@ public class FGame extends Game<FPlayer> implements Listener{
         if(getBlockZone(e.getPlayer(), e.getClickedBlock()) == FZone.ENEMY)
             e.setCancelled(true);
     }
+
+    /*public void test()
+    {
+        net.samagames.tools.scoreboards.ObjectiveSign v = new ObjectiveSign("Matching", "Fallen Kingdom");
+        net.samagames.tools.scoreboards.TeamHandler e;
+        TeamHandler.VTeam vt;
+        vt.
+    }*/
 }
